@@ -1,0 +1,33 @@
+{
+  "name": "hyperpubsub",
+  "version": "1.0.0",
+  "description": "Hypercore Protocol Extension for simple PubSub",
+  "main": "index.js",
+  "scripts": {
+    "generate_protobuf": "protocol-buffers -o ./messages.js ./schema.proto"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fsteff/hyperpubsub.git"
+  },
+  "keywords": [
+    "P2P",
+    "Hypercore",
+    "Dat"
+  ],
+  "author": "Stefan Fixl (Fsteff)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fsteff/hyperpubsub/issues"
+  },
+  "homepage": "https://github.com/fsteff/hyperpubsub#readme",
+  "devDependencies": {
+    "protocol-buffers": "^4.2.0",
+    "tape": "^5.0.1",
+    "hyperspace": "^3.18.1",
+    "tmp-promise": "^3.0.2"
+  },
+  "dependencies": {
+    "sodium-universal": "^3.0.4"
+  }
+}

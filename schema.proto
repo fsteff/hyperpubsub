@@ -1,0 +1,7 @@
+
+message Message {
+    required string topic = 1;
+    required varint type = 2;
+    optional string application = 3;
+    optional bytes data = 4;
+}

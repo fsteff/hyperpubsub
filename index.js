@@ -7,7 +7,7 @@ const MSG_TYPE_MESSAGE = 3;
 
 class PubSub {
 
-    constructor(networker, opts = {application, onError}) {
+    constructor(networker, opts) {
         this.opts = opts || {}
         this.subscribers = new Map()
         this.networker = networker
@@ -16,7 +16,7 @@ class PubSub {
             name: 'hyperpubsub',
             onmessage: this._onMessage,
             encoding: Message,
-            onerror: opts.onError
+            onerror: this.opts.onError
         })
     }
 
@@ -54,7 +54,7 @@ class PubSub {
 
     join(topic, opts = {lookup: true, announce: true, flush: true, remember: false}) {
         const discoveryKey = hash('hyperpubsub.' + topic)
-        return this.networker.configure(discoveryKey, opts)
+        return this.networker.configure(discoveryKey, opts).then(() => discoveryKey.toString('hex'))
     }
 
     _onMessage(msg, peer) {

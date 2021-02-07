@@ -105,10 +105,8 @@ class PubSub {
         if(this.subscribers.has(topic)) peers = this.subscribers.get(topic)
         else this.subscribers.set(topic, peers)
         
-        if(!peers.find(p => p.remoteAddress === peer.remoteAddress)) {
-            peers.add(peer)
-            console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
-        }
+        peers.add(peer)
+        console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
         
     }
 

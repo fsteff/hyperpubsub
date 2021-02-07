@@ -3,7 +3,7 @@ const PubSub = require('./')
 
 const remote = process.argv.length > 2 ? process.argv[2] : null
 
-simulator().then(start).catch(err => console.error(err))
+simulator().then(start)
 async function start({client, cleanup}) {
     const pubsub = new PubSub(client.network)
     
@@ -24,7 +24,6 @@ async function start({client, cleanup}) {
     } else {
         while (true) {
             pubsub.pub('test', Buffer.from('hello world!', 'utf-8'))
-            //console.log('published msg')
             await new Promise(resolve => setTimeout(resolve, 1000))
         } 
     }

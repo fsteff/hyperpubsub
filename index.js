@@ -20,15 +20,15 @@ class PubSub {
         })
 
         this.network.on('peer-add', peer => {
-            console.info('peer-add ' + peer.remoteAddress)
+            console.debug('peer-add ' + peer.remoteAddress)
             for (const topic of this.topics.keys()) {
-                console.info('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
+                console.debug('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
                 this.extension.send({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application}, peer)
             }
         })
 
         this.network.on('peer-remove', peer => {
-            console.info('peer-remove ' + peer.remoteAddress)
+            console.debug('peer-remove ' + peer.remoteAddress)
             for (const topic of this.subscribers.keys()) {
                 this._removePeer(peer, topic)
             }
@@ -40,7 +40,7 @@ class PubSub {
 
         this.join(topic)
             .then(() => {
-                console.info('<- ' + 'sub ' + topic + ' broadcast')
+                console.debug('<- ' + 'sub ' + topic + ' broadcast')
                 this.extension.broadcast({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application})
             })
             .catch(err => {
@@ -52,14 +52,14 @@ class PubSub {
     pub(topic, message) {
         const peers = this.subscribers.get(topic) || []
         for(const peer of peers) {
-            console.info('<- ' + 'msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + peer.remoteAddress)
+            console.debug('<- ' + 'msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + peer.remoteAddress)
             this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, data: message}, peer)
         }
     }
 
     unsub(topic) {
         this.topics.delete(topic)
-        console.info('<- ' + 'unsub ' + topic + ' broadcast')
+        console.debug('<- ' + 'unsub ' + topic + ' broadcast')
         this.extension.broadcast({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application})
     }
 
@@ -79,18 +79,18 @@ class PubSub {
         try {
             switch(msg.type) {
                 case MSG_TYPE_SUBSCRIBE:
-                    console.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
+                    console.debug('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
                     this._addPeer(peer, msg.topic)
                 break
 
                 case MSG_TYPE_UNSUBSCRIBE: 
-                    console.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
+                    console.debug('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
                     this._removePeer(peer, msg.topic)
                 break
 
                 case MSG_TYPE_MESSAGE: 
                     const content = msg.data ?  msg.data.toString('utf-8') : ''
-                    console.info('-> msg data ' + msg.topic + (' (' + content + ') ') + ' from ' + peer.remoteAddress)
+                    console.debug('-> msg data ' + msg.topic + (' (' + content + ') ') + ' from ' + peer.remoteAddress)
                     const handler = this.topics.get(msg.topic)
                     if(handler) handler(msg.data, msg.application)
                     else console.error('no handler found for topic ' + topic)
@@ -113,7 +113,7 @@ class PubSub {
         
         if(!peers.find(p => p.remoteAddress === peer.remoteAddress)) {
             peers.push(peer)
-            console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
+            console.debug('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
         }
     }
 
@@ -123,7 +123,7 @@ class PubSub {
             const idx = peers.findIndex(p => p.remoteAddress === peer.remoteAddress)
             if(idx >= 0) {
                 peers.splice(idx, 1)
-                console.info('subscriber ' + peer.remoteAddress + ' removed from topic ' + topic)
+                console.debug('subscriber ' + peer.remoteAddress + ' removed from topic ' + topic)
             }
         }
     }

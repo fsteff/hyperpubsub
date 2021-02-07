@@ -21,7 +21,7 @@ class PubSub {
 
         this.network.on('peer-add', peer => {
             console.info('peer-add ' + peer.remoteAddress)
-            for (const topic of this.topics.keys()) {
+            for (const topic of this.subscribers.keys()) {
                 console.info('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
                 this.extension.send({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application}, peer)
             }
@@ -29,7 +29,7 @@ class PubSub {
 
         this.network.on('peer-remove', peer => {
             console.info('peer-remove ' + peer.remoteAddress)
-            for (const topic of this.topics.keys()) {
+            for (const topic of this.subscribers.keys()) {
                 this._removePeer(peer, topic)
             }
         })
@@ -91,7 +91,8 @@ class PubSub {
                 console.info('-> msg data ' + msg.topic + (' (' + msg.data.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
                 const handler = this.topics.get(msg.topic)
                 if(handler) handler(msg.data, msg.application)
-                else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)
+                else console.error('no handler found for topic ' + topic)
+                //else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)
             break
 
             default:
@@ -100,19 +101,23 @@ class PubSub {
     }
 
     _addPeer(peer, topic) {
-        let peers = []
+        let peers = new Set()
         if(this.subscribers.has(topic)) peers = this.subscribers.get(topic)
         else this.subscribers.set(topic, peers)
-        peers.push(peer)
-        console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
+        
+        if(!peers.find(p => p.remoteAddress === peer.remoteAddress)) {
+            peers.add(peer)
+            console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
+        }
+        
     }
 
     _removePeer(peer, topic) {
         if(this.subscribers.has(topic)){
-            /** @type {[]} */
+            /** @type {Set} */
             const peers = this.subscribers.get(topic)
-            const idx = peers.findIndex(p => p.remoteAddress === peer.remoteAddress)
-            if(idx >= 0) peers.splice(idx, 1)
+            peers.delete(peer)
+            console.info('subscriber ' + peer.remoteAddress + ' removed from topic ' + topic)
         }
     }
 

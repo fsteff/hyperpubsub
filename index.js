@@ -7,16 +7,28 @@ const MSG_TYPE_MESSAGE = 3;
 
 class PubSub {
 
-    constructor(networker, opts) {
+    constructor(network, opts) {
         this.opts = opts || {}
         this.subscribers = new Map()
-        this.networker = networker
+        this.network = network
         this.topics = new Map()
-        this.extension = this.networker.registerExtension({
+        this.extension = this.network.registerExtension({
             name: 'hyperpubsub',
             onmessage: this._onMessage,
             encoding: Message,
             onerror: this.opts.onError
+        })
+
+        this.network.on('peer-add', peer => {
+            for (const topic of this.topics.keys()) {
+                this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, message}, peer)
+            }
+        })
+
+        this.network.on('peer-remove', peer => {
+            for (const topic of this.topics.keys()) {
+                this._removePeer(peer, topic)
+            }
         })
     }
 
@@ -54,7 +66,7 @@ class PubSub {
 
     join(topic, opts = {lookup: true, announce: true, flush: true, remember: false}) {
         const discoveryKey = hash('hyperpubsub.' + topic)
-        return this.networker.configure(discoveryKey, opts).then(() => discoveryKey.toString('hex'))
+        return this.network.configure(discoveryKey, opts).then(() => discoveryKey.toString('hex'))
     }
 
     _onMessage(msg, peer) {
@@ -89,7 +101,7 @@ class PubSub {
         if(this.subscribers.has(topic)){
             /** @type {[]} */
             const peers = this.subscribers.get(topic)
-            const idx = peers.findIndex(p => p === peer)
+            const idx = peers.findIndex(p => p.remoteAddress === peer.remoteAddress)
             if(idx >= 0) peers.splice(idx, 1)
         }
     }

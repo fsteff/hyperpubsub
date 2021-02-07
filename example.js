@@ -11,11 +11,11 @@ async function start({client, cleanup}) {
     const key = await pubsub.join('test')
     console.log('successfully joined the dht at topic hyper://' + key)
 
-    client.network.on('peer-add', peer => console.log('connected to peer: ' + peer))
+    client.network.on('peer-add', peer => console.log('connected to peer: ' + peer.remoteAddress))
 
     if(remote) {
         await new Promise(resolve => {
-            console.log('listening to remote topic ' + remote)
+            console.log('listening to remote topic')
             pubsub.sub('test', data => {
                 const msg = data.toString('utf-8')
                 console.log(msg)

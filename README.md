@@ -7,6 +7,12 @@ It is designed to be used with a [hyperspace](https://github.com/hypercore-proto
 
 Here's an [example](https://github.com/fsteff/hyperpubsub/blob/main/example.js).
 
+## Install
+
+``` 
+npm install hyperpubsub
+```
+
 ## API
 
 ```javascript

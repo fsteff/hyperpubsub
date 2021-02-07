@@ -21,7 +21,7 @@ class PubSub {
 
         this.network.on('peer-add', peer => {
             console.info('peer-add ' + peer.remoteAddress)
-            for (const topic of this.subscribers.keys()) {
+            for (const topic of this.topics.keys()) {
                 console.info('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
                 this.extension.send({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application}, peer)
             }
@@ -53,7 +53,7 @@ class PubSub {
         const peers = this.subscribers.get(topic) || []
         for(const peer of peers) {
             console.info('<- ' + 'msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + peer.remoteAddress)
-            this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, message}, peer)
+            this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, data: message}, peer)
         }
     }
 
@@ -76,27 +76,33 @@ class PubSub {
     }
 
     _onMessage(msg, peer) {
-        switch(msg.type) {
-            case MSG_TYPE_SUBSCRIBE:
-                console.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
-                this._addPeer(peer, msg.topic)
-            break
+        try {
+            switch(msg.type) {
+                case MSG_TYPE_SUBSCRIBE:
+                    console.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
+                    this._addPeer(peer, msg.topic)
+                break
 
-            case MSG_TYPE_UNSUBSCRIBE: 
-                console.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
-                this._removePeer(peer, msg.topic)
-            break
+                case MSG_TYPE_UNSUBSCRIBE: 
+                    console.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
+                    this._removePeer(peer, msg.topic)
+                break
 
-            case MSG_TYPE_MESSAGE: 
-                console.info('-> msg data ' + msg.topic + (' (' + msg.data.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
-                const handler = this.topics.get(msg.topic)
-                if(handler) handler(msg.data, msg.application)
-                else console.error('no handler found for topic ' + topic)
-                //else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)
-            break
+                case MSG_TYPE_MESSAGE: 
+                    const content = msg.data ?  msg.data.toString('utf-8') : ''
+                    console.info('-> msg data ' + msg.topic + (' (' + content + ') ') + ' from ' + peer.remoteAddress)
+                    const handler = this.topics.get(msg.topic)
+                    if(handler) handler(msg.data, msg.application)
+                    else console.error('no handler found for topic ' + topic)
+                    //else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)
+                break
 
-            default:
-                throw new Error('Invalid PubSub message type: ' + msg.type)
+                default:
+                    throw new Error('Invalid PubSub message type: ' + msg.type)
+            }
+        } catch (err) {
+            if(this.onError) this.onError(err)
+            console.error(err)
         }
     }
 

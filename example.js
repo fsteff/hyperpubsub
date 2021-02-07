@@ -7,11 +7,10 @@ simulator().then(start).catch(err => console.error(err))
 async function start({client, cleanup}) {
     const pubsub = new PubSub(client.network)
     
-    console.log('joining the network...')
-    const key = await pubsub.join('test')
-    console.log('successfully joined the dht at topic hyper://' + key)
-
     client.network.on('peer-add', peer => console.log('connected to peer: ' + peer.remoteAddress))
+
+    console.log('joining the network...')
+    pubsub.join('test').then(key => console.log('successfully joined the dht at topic hyper://' + key))
 
     if(remote) {
         await new Promise(resolve => {

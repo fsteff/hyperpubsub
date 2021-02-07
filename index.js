@@ -20,12 +20,14 @@ class PubSub {
         })
 
         this.network.on('peer-add', peer => {
+            console.info('peer-add ' + peer.remoteAddress)
             for (const topic of this.topics.keys()) {
                 this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, message}, peer)
             }
         })
 
         this.network.on('peer-remove', peer => {
+            console.info('peer-remove ' + peer.remoteAddress)
             for (const topic of this.topics.keys()) {
                 this._removePeer(peer, topic)
             }
@@ -72,14 +74,17 @@ class PubSub {
     _onMessage(msg, peer) {
         switch(msg.type) {
             case MSG_TYPE_SUBSCRIBE:
+                log.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
                 this._addPeer(peer, msg.topic)
             break
 
             case MSG_TYPE_UNSUBSCRIBE: 
+                log.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
                 this._removePeer(peer, msg.topic)
             break
 
             case MSG_TYPE_MESSAGE: 
+                log.info('-> msg data ' + msg.topic + (' (' + msg.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
                 const handler = this.topics.get(msg.topic)
                 if(handler) handler(msg.data, msg.application)
                 else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)

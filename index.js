@@ -64,10 +64,9 @@ class PubSub {
     }
 
     close() { 
-        for(const topic of this.topics.keys()) {
-            this.unsub(topic)
-        }
         this.extension.destroy()
+        delete this.topics
+        delete this.subscribers
     }
 
     join(topic, opts = {lookup: true, announce: true, flush: true, remember: false}) {

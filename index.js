@@ -22,7 +22,7 @@ class PubSub {
         this.network.on('peer-add', peer => {
             console.info('peer-add ' + peer.remoteAddress)
             for (const topic of this.topics.keys()) {
-                log.info('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
+                console.info('<- ' + 'sub ' + topic + ' to ' + peer.remoteAddress)
                 this.extension.send({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application}, peer)
             }
         })
@@ -40,7 +40,7 @@ class PubSub {
 
         this.join(topic)
             .then(() => {
-                log.info('<- ' + 'sub ' + topic + ' broadcast')
+                console.info('<- ' + 'sub ' + topic + ' broadcast')
                 this.extension.broadcast({topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application})
             })
             .catch(err => {
@@ -52,14 +52,14 @@ class PubSub {
     pub(topic, message) {
         const peers = this.subscribers.get(topic) || []
         for(const peer of peers) {
-            log.info('<- ' + 'msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + peer.remoteAddress)
+            console.info('<- ' + 'msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + peer.remoteAddress)
             this.extension.send({topic, type: MSG_TYPE_MESSAGE, application: this.opts.application, message}, peer)
         }
     }
 
     unsub(topic) {
         this.topics.delete(topic)
-        log.info('<- ' + 'unsub ' + topic + ' broadcast')
+        console.info('<- ' + 'unsub ' + topic + ' broadcast')
         this.extension.broadcast({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application})
     }
 
@@ -78,17 +78,17 @@ class PubSub {
     _onMessage(msg, peer) {
         switch(msg.type) {
             case MSG_TYPE_SUBSCRIBE:
-                log.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
+                console.info('-> msg sub ' + msg.topic + ' from ' + peer.remoteAddress)
                 this._addPeer(peer, msg.topic)
             break
 
             case MSG_TYPE_UNSUBSCRIBE: 
-                log.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
+                console.info('-> msg unsub ' + msg.topic + ' from ' + peer.remoteAddress)
                 this._removePeer(peer, msg.topic)
             break
 
             case MSG_TYPE_MESSAGE: 
-                log.info('-> msg data ' + msg.topic + (' (' + msg.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
+                console.info('-> msg data ' + msg.topic + (' (' + msg.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
                 const handler = this.topics.get(msg.topic)
                 if(handler) handler(msg.data, msg.application)
                 else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)

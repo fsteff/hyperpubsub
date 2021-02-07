@@ -107,21 +107,24 @@ class PubSub {
     }
 
     _addPeer(peer, topic) {
-        let peers = new Set()
+        let peers = []
         if(this.subscribers.has(topic)) peers = this.subscribers.get(topic)
         else this.subscribers.set(topic, peers)
         
-        peers.add(peer)
-        console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
-        
+        if(!peers.find(p => p.remoteAddress === peer.remoteAddress)) {
+            peers.push(peer)
+            console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
+        }
     }
 
     _removePeer(peer, topic) {
         if(this.subscribers.has(topic)){
-            /** @type {Set} */
             const peers = this.subscribers.get(topic)
-            peers.delete(peer)
-            console.info('subscriber ' + peer.remoteAddress + ' removed from topic ' + topic)
+            const idx = peers.findIndex(p => p.remoteAddress === peer.remoteAddress)
+            if(idx >= 0) {
+                peers.splice(idx, 1)
+                console.info('subscriber ' + peer.remoteAddress + ' removed from topic ' + topic)
+            }
         }
     }
 

@@ -14,7 +14,7 @@ class PubSub {
         this.topics = new Map()
         this.extension = this.network.registerExtension({
             name: 'hyperpubsub',
-            onmessage: this._onMessage,
+            onmessage: (msg, peer) => this._onMessage(msg, peer),
             encoding: Message,
             onerror: this.opts.onError
         })
@@ -88,7 +88,7 @@ class PubSub {
             break
 
             case MSG_TYPE_MESSAGE: 
-                console.info('-> msg data ' + msg.topic + (' (' + msg.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
+                console.info('-> msg data ' + msg.topic + (' (' + msg.data.toString('utf-8') + ') ') + ' from ' + peer.remoteAddress)
                 const handler = this.topics.get(msg.topic)
                 if(handler) handler(msg.data, msg.application)
                 else this.extension.send({topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application}, peer)
@@ -104,6 +104,7 @@ class PubSub {
         if(this.subscribers.has(topic)) peers = this.subscribers.get(topic)
         else this.subscribers.set(topic, peers)
         peers.push(peer)
+        console.info('subscriber ' + peer.remoteAddress + ' added to topic ' + topic)
     }
 
     _removePeer(peer, topic) {

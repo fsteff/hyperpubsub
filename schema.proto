@@ -1,7 +1,18 @@
 
-message Message {
+message PubSubMessage {
     required string topic = 1;
     required varint type = 2;
     optional string application = 3;
     optional bytes data = 4;
+}
+
+message PexMessage {
+    required bytes discoveryKey = 1;
+    optional string address = 2; // no address means the address and public key of the sender is to be used
+    optional bytes publicKey = 3;
+    optional uint64 lastSeen = 4;
+}
+
+message PexBatch {
+    repeated PexMessage messages = 1;
 }

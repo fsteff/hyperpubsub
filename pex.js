@@ -12,9 +12,11 @@ class PeerExchange extends EventEmitter {
         super()
         this.pubsub = pubsub
         this.peers = new PeerDict(maxSize || 1000)
+        /** @type {Array<Buffer>} */
         this.topics = []
+        this.anytopic = !!anytopic
 
-        if (anytopic) pubsub.sub('pex', (msg, app, peer) => this._onMessage(msg, peer), false)
+        if (this.anytopic) pubsub.sub('pex', (msg, app, peer) => this._onMessage(msg, peer), false)
 
         pubsub.on('subscriber-add', (topic, peer) => this._sendPeers(topic, peer))
         pubsub.on('subscriber-remove', (topic, peer) => this.peers.peerUnsubscribed(peer))
@@ -35,17 +37,24 @@ class PeerExchange extends EventEmitter {
         this.topics = this.topics.filter(t => !t.equals(discoveryKey))
     }
 
+    close() {
+        this.topics.forEach(t => this.pubsub.unsub(toTopic(discoveryKey)))
+        this.topics = null
+        this.peers = null
+        this.pubsub.peerExchange = null
+    }
+
     _onMessage(msg, peer) {
         try{
             const messages = decode(msg)
             for (const pex of messages) {
-                const directConnection = !pex.address
-                // sanity checks
+                // sanity checks (TODO: more)
                 if(! Buffer.isBuffer(pex.discoveryKey) || pex.discoveryKey.length !== 32) {
                     console.warn('received PEX peer didn`t pass sanity check (discovery key of length ' + pex.discoveryKey.length + ')')
                     continue
                 }
 
+                const directConnection = !pex.address
                 if (directConnection) {
                     pex.address = peer.remoteAddress
                     pex.publicKey = peer.remotePublicKey
@@ -54,6 +63,14 @@ class PeerExchange extends EventEmitter {
                 this.peers.add(pex, directConnection)
 
                 this.emit('peer-received', pex.discoveryKey, {remoteAddress: pex.address, remotePublicKey: pex.publicKey})
+
+                if(this.anytopic) {
+                    const recvTopic = toTopic(pex.discoveryKey)
+                    const mytopics = [...this.pubsub.topics.keys()].filter(t => t.startsWith('pex'))
+                    if(!mytopics.includes(recvTopic)) {
+                        this.pubsub.sub(recvTopic, (msg, app, peer) => this._onMessage(msg, peer), false)
+                    }
+                }
             }
         } catch (err) {
             this.emit('error', err)
@@ -61,15 +78,20 @@ class PeerExchange extends EventEmitter {
     }
 
     _sendPeers(topic, peer) {
-        const discoveryKey = toDiscoveryKey(topic)
-        const peers = this.peers.get(discoveryKey)
-        if(this.topics.findIndex(t => t.equals(discoveryKey)) >= 0) {
-            peers.push({discoveryKey})
-        }
-
-        if (peers.length > 0) {
-            const msg = encode(peers)
-            this.pubsub.pub(topic, msg, peer)
+        if(topic === 'pex') {
+            const myTopics = this.topics.map(discoveryKey => {return {discoveryKey}})
+            this.pubsub.pub('pex', encode(myTopics), peer)
+        } else {
+            const discoveryKey = toDiscoveryKey(topic)
+            const peers = this.peers.get(discoveryKey)
+            if(this.topics.findIndex(t => t.equals(discoveryKey)) >= 0) {
+                peers.push({discoveryKey})
+            }
+    
+            if (peers.length > 0) {
+                const msg = encode(peers)
+                this.pubsub.pub(topic, msg, peer)
+            }
         }
     }
 }

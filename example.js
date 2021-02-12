@@ -14,11 +14,11 @@ async function start({client, cleanup}) {
 
     console.log('joining the network...')
     pubsub.join('test').then(key => console.log('successfully joined the dht at topic hyper://' + key))
-    pubsub.pex().lookup(discoveryKey)
-    pubsub.pex().announce(discoveryKey)
-    pubsub.pex().on('peer-received', (discoveryKey, peer) => console.log('received peer: ' + peer.remoteAddress + ' for discovery key ' + discoveryKey.toString('hex')))
-
+    
+    const pex = pubsub.pex(1000, !remote)
+    pex.on('peer-received', (discoveryKey, peer) => console.log('received peer: ' + peer.remoteAddress + ' for discovery key ' + discoveryKey.toString('hex')))
     if(remote) {
+        pex.lookup(discoveryKey)
         await new Promise(resolve => {
             console.log('listening to remote topic')
             pubsub.sub('test', data => {
@@ -28,8 +28,9 @@ async function start({client, cleanup}) {
             })
         })
     } else {
+        pex.announce(discoveryKey)
         while (true) {
-            pubsub.pub('test', Buffer.from('hello world!', 'utf-8'))
+            //pubsub.pub('test', Buffer.from('hello world!', 'utf-8'))
             await new Promise(resolve => setTimeout(resolve, 1000))
         } 
     }

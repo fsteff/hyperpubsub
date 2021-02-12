@@ -70,7 +70,7 @@ class PubSub extends EventEmitter {
         }
 
         function send(to) {
-            debug('<- msg ' + topic + (' (' + message.toString('utf-8') + ') ') + ' to ' + to.remoteAddress)
+            debug('<- msg ' + topic + ' to ' + to.remoteAddress)
             self.extension.send({ topic, type: MSG_TYPE_MESSAGE, application: self.opts.application, data: message }, to)
         }
     }
@@ -107,7 +107,7 @@ class PubSub extends EventEmitter {
 
                 case MSG_TYPE_MESSAGE:
                     const content = msg.data ? msg.data.toString('utf-8') : ''
-                    debug('-> msg data ' + msg.topic + (' (' + content + ') ') + ' from ' + peer.remoteAddress)
+                    debug('-> msg data ' + msg.topic + ' from ' + peer.remoteAddress)
                     const handler = this.topics.get(msg.topic)
                     if (handler) {
                         handler(msg.data, msg.application, peer)
@@ -149,9 +149,9 @@ class PubSub extends EventEmitter {
         }
     }
 
-    pex() {
+    pex(maxSize = 1000, anytopic = false) {
         if (!this.peerExchange) {
-            this.peerExchange = new PeerExchange(this)
+            this.peerExchange = new PeerExchange(this, maxSize, anytopic)
             this.peerExchange.on('error', err => this.emit('error', err))
         }
         return this.peerExchange

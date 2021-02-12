@@ -28,3 +28,20 @@ pubsub.pub('some topic', Buffer.from('hello', 'utf-8')) // sends message to all 
 pubsub.unsub('some topic') // no longer interested
 pubsub.close() // cleanup
 ```
+
+## Peer Exchange
+
+As of 1.1.0 hyperpubsub also supports a *gossip* peer exchange protocol that uses pubsub for exchanging known peers.
+It can be configured to accumulate knowledge of all discovery keys the peers are looking for or announcing - effectively serving as a tracker server.
+The list of peers also keeps track of the time a peer was last seen and discards peers that haven't been seen for > 10mins.
+The number of peers to keep track of is limited - once that is reached, older peers are randomly removed from the list.
+
+```javascript
+const pex = pubsub.pex(1000 /* max. number of peers to keep track of */, false /* true means tracker-mode */)
+pex.announce(discoveryKey) // announce yourself to a discovery key
+pex.lookup(discoveryKey) // "ask" others to send them their peers for that discovery key 
+```
+
+## TODO
+
+- [ ] Denial-of-Service and spam protections

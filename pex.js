@@ -47,6 +47,10 @@ class PeerExchange extends EventEmitter {
     _onMessage(msg, peer) {
         try{
             const messages = decode(msg)
+            if(messages.length > MAX_PEERS + 10) {
+                // likely trying to DoS us
+                return this.emit('error', new Error('peer sent ' + messages.length + 'messages, dropping that'))
+            }
             for (const pex of messages) {
                 // sanity checks (TODO: more)
                 if(! Buffer.isBuffer(pex.discoveryKey) || pex.discoveryKey.length !== 32) {

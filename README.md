@@ -16,7 +16,7 @@ npm install hyperpubsub
 ## API
 
 ```javascript
-const PubSub = require('hyperpubsub')
+const {PubSub} = require('hyperpubsub').debug() // call debug() if you want debugging messages printed to the cli
 
 // ... set up or connect to a hyperspace instance
 // client = a hyperspace client
@@ -29,9 +29,9 @@ pubsub.unsub('some topic') // no longer interested
 pubsub.close() // cleanup
 ```
 
-## Peer Exchange
+## Peer Exchange (WIP)
 
-As of 1.1.0 hyperpubsub also supports a *gossip* peer exchange protocol that uses pubsub for exchanging known peers.
+As of 1.1.0 hyperpubsub also supports a *gossip* peer exchange protocol that uses pubsub for exchanging known peers - but the integration into hyperspace is still TBD(!)
 It can be configured to accumulate knowledge of all discovery keys the peers are looking for or announcing - effectively serving as a tracker server.
 The list of peers also keeps track of the time a peer was last seen and discards peers that haven't been seen for > 10mins.
 The number of peers to keep track of is limited - once that is reached, older peers are randomly removed from the list.
@@ -43,5 +43,5 @@ pex.lookup(discoveryKey) // "ask" others to send them their peers for that disco
 ```
 
 ## TODO
-
+- [ ] Hyperspace integration
 - [ ] Denial-of-Service and spam protections

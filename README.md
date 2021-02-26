@@ -15,6 +15,8 @@ npm install hyperpubsub
 
 ## API
 
+The message format is binary, so if objects are sent they have to be encoded/decoded manually.
+
 ```javascript
 const {PubSub} = require('hyperpubsub').debug() // call debug() if you want debugging messages printed to the cli
 

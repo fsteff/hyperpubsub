@@ -89,7 +89,9 @@ class PubSub extends EventEmitter {
 
     join(topic, opts = { lookup: true, announce: true, flush: true, remember: false }) {
         const discoveryKey = hash('hyperpubsub.' + topic)
-        return this.network.configure(discoveryKey, opts).then(() => discoveryKey.toString('hex'))
+        return this.network.configure(discoveryKey, opts)
+            .then(() => debug('joined topic "' + topic + '" (' + discoveryKey.toString('hex') + ')'))
+            .then(() => discoveryKey.toString('hex'))
     }
 
     _onMessage(msg, peer) {
@@ -156,13 +158,56 @@ class PubSub extends EventEmitter {
         }
         return this.peerExchange
     }
+
+    pubPrivateMsg(recipientPubKey, message, peer = null) {
+        const ciphertext = privateMessageSeal(message, recipientPubKey)
+        const topic = hash(recipientPubKey).toString('hex')
+        this.pub(topic, ciphertext, peer)
+    }
+
+    subPrivateMsg(publicKey, secretKey, handler, announce = true) {
+        const topic = hash(recipientPubKey).toString('hex')
+        this.sub(topic, onData, announce)
+
+        function onData(data, app, peer) {
+            const msg = privateMessageOpen(data, publicKey, secretKey)
+            if(msg) handler(msg, app, peer)
+        }
+    }
+
+    joinPublicKey(publicKey, opts = { lookup: true, announce: true, flush: true, remember: false }) {
+        const topic = hash(publicKey).toString('hex')
+        return this.join(topic, opts)
+    }
 }
 
 function hash(txt) {
-    const buf = Buffer.from(txt, 'utf-8')
+    const buf = typeof txt === 'string' ? Buffer.from(txt, 'utf-8') : Buffer.from(txt)
     const digest = Buffer.allocUnsafe(32)
     sodium.crypto_generichash(digest, buf)
     return digest
+}
+
+function privateMessageSeal(message, recipientPubKey) {
+    if(!Buffer.isBuffer(message)) this.emit('error', new Error('private message has to be a Buffer'))
+    if(!Buffer.isBuffer(recipientPubKey) || recipientPubKey.length !== sodium.crypto_box_PUBLICKEYBYTES) this.emit('invalid public key')
+
+    const ciphertext = Buffer.alloc(message.length + sodium.crypto_box_SEALBYTES)
+    sodium.crypto_box_seal(ciphertext, message, recipientPubKey)
+    return ciphertext
+}
+
+function privateMessageOpen(ciphertext, publicKey, secretKey) {
+    if(!Buffer.isBuffer(ciphertext) || ciphertext.length <= sodium.crypto_box_SEALBYTES) this.emit('error', new Error('invalid ciphertext'))
+    if(!Buffer.isBuffer(publicKey) || publicKey.length !== sodium.crypto_box_PUBLICKEYBYTES) this.emit('invalid public key')
+    if(!Buffer.isBuffer(secretKey) || secretKey.length !== sodium.crypto_box_SECRETKEYBYTES) this.emit('invalid secret key')
+
+    const message = Buffer.alloc(ciphertext.length - sodium.crypto_box_SEALBYTES)
+    if(!sodium.crypto_box_seal_open(message, ciphertext, publicKey, secretKey)) {
+        this.emit('error', 'failed to open sealed box - corrupted or not intended for this receipient')
+        return null
+    }
+    return message
 }
 
 module.exports = { 

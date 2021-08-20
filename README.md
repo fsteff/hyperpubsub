@@ -31,19 +31,28 @@ pubsub.unsub('some topic') // no longer interested
 pubsub.close() // cleanup
 ```
 
-## Peer Exchange (WIP)
+## Private Messges
 
-As of 1.1.0 hyperpubsub also supports a *gossip* peer exchange protocol that uses pubsub for exchanging known peers - but the integration into hyperspace is still TBD(!)
-It can be configured to accumulate knowledge of all discovery keys the peers are looking for or announcing - effectively serving as a tracker server.
-The list of peers also keeps track of the time a peer was last seen and discards peers that haven't been seen for > 10mins.
-The number of peers to keep track of is limited - once that is reached, older peers are randomly removed from the list.
+As of 1.2.0 hyperpubsub also supports private, encrypted messages (utilizing libsodium sealed boxes).
+The (hash of the) public key of the receiver serves as the pubsub topic, the rest is very similar to "normal" pubsub.
 
 ```javascript
-const pex = pubsub.pex(1000 /* max. number of peers to keep track of */, false /* true means tracker-mode */)
-pex.announce(discoveryKey) // announce yourself to a discovery key
-pex.lookup(discoveryKey) // "ask" others to send them their peers for that discovery key 
+// the key pair has to be set up using libsodium
+const sodium = require('sodium-universal')
+const publicKey = Buffer.alloc(sodium.crypto_box_PUBLICKEYBYTES)
+const secretKey = Buffer.alloc(sodium.crypto_box_SECRETKEYBYTES)
+sodium.crypto_box_keypair(publicKey, secretKey)
+
+// subscribe to private messages
+pubsub.subPrivateMsg(publicKey, secretKey, (msg) => {
+ // process message
+})
+
+// send private messages
+pubsub2.pubPrivateMsg(publicKey, Buffer.from('hello', 'utf-8'))
 ```
 
 ## TODO
-- [ ] Hyperspace integration
+- [ ] PEX is WIP
+  - [ ] Hyperspace integration
 - [ ] Denial-of-Service and spam protections

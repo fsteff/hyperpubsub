@@ -166,7 +166,7 @@ class PubSub extends EventEmitter {
     }
 
     subPrivateMsg(publicKey, secretKey, handler, announce = true) {
-        const topic = hash(recipientPubKey).toString('hex')
+        const topic = hash(publicKey).toString('hex')
         this.sub(topic, onData, announce)
 
         function onData(data, app, peer) {

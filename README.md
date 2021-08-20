@@ -5,8 +5,6 @@ In addition to that, the peer announces itself to listen to a topic on the hyper
 
 It is designed to be used with a [hyperspace](https://github.com/hypercore-protocol/hyperspace-client) RPC client, but might also work directly with a corestore networker (untested).
 
-Here's an [example](https://github.com/fsteff/hyperpubsub/blob/main/example.js).
-
 ## Install
 
 ``` 

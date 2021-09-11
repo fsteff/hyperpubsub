@@ -1,6 +1,6 @@
 {
   "name": "hyperpubsub",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Hypercore Protocol Extension for simple PubSub",
   "main": "index.js",
   "scripts": {

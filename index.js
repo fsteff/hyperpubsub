@@ -78,7 +78,7 @@ class PubSub extends EventEmitter {
     unsub(topic) {
         this.topics.delete(topic)
         debug('<- unsub ' + topic + ' broadcast')
-        this.extension.broadcast({ topic, type: MSG_TYPE_UNSUBSCRIBE, application: opts.application })
+        this.extension.broadcast({ topic, type: MSG_TYPE_UNSUBSCRIBE, application: this.opts.application })
     }
 
     close() {

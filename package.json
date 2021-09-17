@@ -1,10 +1,11 @@
 {
   "name": "hyperpubsub",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Hypercore Protocol Extension for simple PubSub",
   "main": "index.js",
   "scripts": {
-    "generate_protobuf": "protocol-buffers -o ./messages.js ./schema.proto"
+    "generate_protobuf": "protocol-buffers -o ./messages.js ./schema.proto",
+    "test": "tape tests.js"
   },
   "repository": {
     "type": "git",

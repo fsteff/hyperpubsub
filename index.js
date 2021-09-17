@@ -42,21 +42,17 @@ class PubSub extends EventEmitter {
         })
     }
 
-    sub(topic, handler, announce = true) {
+    async sub(topic, handler, announce = true) {
         this.topics.set(topic, handler)
 
         if (announce) {
-            this.join(topic)
-                .then(() => {
-                    debug('<- sub ' + topic + ' broadcast')
-                    this.extension.broadcast({ topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application })
-                })
-                .catch(err => {
-                    this.emit('error', err)
-                })
-        } else {
+            await this.join(topic)
+        }
+        try {
             debug('<- sub ' + topic + ' broadcast')
             this.extension.broadcast({ topic, type: MSG_TYPE_SUBSCRIBE, application: this.opts.application })
+        } catch (err) {
+            this.emit('error', err)
         }
     }
 
@@ -70,8 +66,12 @@ class PubSub extends EventEmitter {
         }
 
         function send(to) {
-            debug('<- msg ' + topic + ' to ' + to.remoteAddress)
-            self.extension.send({ topic, type: MSG_TYPE_MESSAGE, application: self.opts.application, data: message }, to)
+            try {
+                debug('<- msg ' + topic + ' to ' + to.remoteAddress)
+                self.extension.send({ topic, type: MSG_TYPE_MESSAGE, application: self.opts.application, data: message }, to)
+            } catch (err) {
+                this.emit('error', err)
+            }
         }
     }
 
@@ -87,11 +87,12 @@ class PubSub extends EventEmitter {
         delete this.subscribers
     }
 
-    join(topic, opts = { lookup: true, announce: true, flush: true, remember: false }) {
+    async join(topic, opts = { lookup: true, announce: true, flush: true, remember: false }) {
         const discoveryKey = hash('hyperpubsub.' + topic)
-        return this.network.configure(discoveryKey, opts)
-            .then(() => debug('joined topic "' + topic + '" (' + discoveryKey.toString('hex') + ')'))
-            .then(() => discoveryKey.toString('hex'))
+        await this.network.configure(discoveryKey, opts)
+        const discoveryTopic = discoveryKey.toString('hex')
+        debug(`joined topic "${topic}" (${discoveryTopic})`)
+        return discoveryTopic
     }
 
     _onMessage(msg, peer) {

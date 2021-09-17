@@ -18,8 +18,9 @@ The message format is binary, so if objects are sent they have to be encoded/dec
 ```javascript
 const {PubSub} = require('hyperpubsub').debug() // call debug() if you want debugging messages printed to the cli
 
-// ... set up or connect to a hyperspace instance
+// ... set up or connect to a hyperspace instanced
 // client = a hyperspace client
+// see https://hypercore-protocol.org/guides/getting-started/hyperspace/
 
 const pubsub = new PubSub(client.network, {application: 'example app', onError: <somehowhandlethaterror>})
 pubsub.join('some topic') // returns Promise<string> of the discovery key used for the dht
@@ -28,6 +29,9 @@ pubsub.pub('some topic', Buffer.from('hello', 'utf-8')) // sends message to all 
 pubsub.unsub('some topic') // no longer interested
 pubsub.close() // cleanup
 ```
+
+[example.js](https://github.com/fsteff/hyperpubsub/blob/main/example.js) is a minimalistic demonstrator that uses the hyperspace [simulator](https://github.com/hypercore-protocol/hyperspace#simulator) for local tests.
+If started twice you can see it exchanging "hello" messages.
 
 ## Private Messges
 

@@ -171,8 +171,12 @@ class PubSub extends EventEmitter {
         this.sub(topic, onData, announce)
 
         function onData(data, app, peer) {
-            const msg = privateMessageOpen(data, publicKey, secretKey)
-            if(msg) handler(msg, app, peer)
+            try {
+                const msg = privateMessageOpen(data, publicKey, secretKey)
+                if(msg) handler(msg, app, peer)
+            } catch (err) {
+                this.emit('err', err)
+            }
         }
     }
 
@@ -190,8 +194,8 @@ function hash(txt) {
 }
 
 function privateMessageSeal(message, recipientPubKey) {
-    if(!Buffer.isBuffer(message)) this.emit('error', new Error('private message has to be a Buffer'))
-    if(!Buffer.isBuffer(recipientPubKey) || recipientPubKey.length !== sodium.crypto_box_PUBLICKEYBYTES) this.emit('invalid public key')
+    if(!Buffer.isBuffer(message)) throw new Error('private message has to be a Buffer')
+    if(!Buffer.isBuffer(recipientPubKey) || recipientPubKey.length !== sodium.crypto_box_PUBLICKEYBYTES) throw new Error('invalid public key')
 
     const ciphertext = Buffer.alloc(message.length + sodium.crypto_box_SEALBYTES)
     sodium.crypto_box_seal(ciphertext, message, recipientPubKey)
@@ -199,14 +203,13 @@ function privateMessageSeal(message, recipientPubKey) {
 }
 
 function privateMessageOpen(ciphertext, publicKey, secretKey) {
-    if(!Buffer.isBuffer(ciphertext) || ciphertext.length <= sodium.crypto_box_SEALBYTES) this.emit('error', new Error('invalid ciphertext'))
-    if(!Buffer.isBuffer(publicKey) || publicKey.length !== sodium.crypto_box_PUBLICKEYBYTES) this.emit('invalid public key')
-    if(!Buffer.isBuffer(secretKey) || secretKey.length !== sodium.crypto_box_SECRETKEYBYTES) this.emit('invalid secret key')
+    if(!Buffer.isBuffer(ciphertext) || ciphertext.length <= sodium.crypto_box_SEALBYTES) throw new Error('invalid ciphertext')
+    if(!Buffer.isBuffer(publicKey) || publicKey.length !== sodium.crypto_box_PUBLICKEYBYTES) throw new Error('invalid public key')
+    if(!Buffer.isBuffer(secretKey) || secretKey.length !== sodium.crypto_box_SECRETKEYBYTES) throw new Error('invalid secret key')
 
     const message = Buffer.alloc(ciphertext.length - sodium.crypto_box_SEALBYTES)
     if(!sodium.crypto_box_seal_open(message, ciphertext, publicKey, secretKey)) {
-        this.emit('error', 'failed to open sealed box - corrupted or not intended for this receipient')
-        return null
+        throw new Error('failed to open sealed box - corrupted or not intended for this receipient')
     }
     return message
 }

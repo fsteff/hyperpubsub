@@ -23,9 +23,9 @@
   },
   "homepage": "https://github.com/fsteff/hyperpubsub#readme",
   "devDependencies": {
+    "hyperspace": "git+https://github.com/fsteff/hyperspace.git",
     "protocol-buffers": "^4.2.0",
     "tape": "^5.0.1",
-    "hyperspace": "git+https://github.com/fsteff/hyperspace.git",
     "tmp-promise": "^3.0.2"
   },
   "dependencies": {

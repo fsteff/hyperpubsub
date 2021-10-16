@@ -30,7 +30,7 @@ pubsub.unsub('some topic') // no longer interested
 pubsub.close() // cleanup
 ```
 
-[example.js](https://github.com/fsteff/hyperpubsub/blob/main/example.js) is a minimalistic demonstrator that uses the hyperspace [simulator](https://github.com/hypercore-protocol/hyperspace#simulator) for local tests.
+[basic.js](./examples/basic.js) is a minimalistic demonstrator that uses the hyperspace [simulator](https://github.com/hypercore-protocol/hyperspace#simulator) for tests.
 If started twice you can see it exchanging "hello" messages.
 
 ## Private Messges
@@ -53,6 +53,9 @@ pubsub.subPrivateMsg(publicKey, secretKey, (msg) => {
 // send private messages
 pubsub2.pubPrivateMsg(publicKey, Buffer.from('hello', 'utf-8'))
 ```
+
+[private.js](./examples/private.js) is a minimalistic demonstrator for private messages (uses the simulator as well).
+Start it once, copy the public key that's printed to the cli and pass it as argument to a second instance.
 
 ## TODO
 - [ ] PEX is WIP

@@ -1,4 +1,4 @@
-const {PubSub} = require('.').debug() // call debug() if you want debugging messages printed to the cli
+const {PubSub} = require('..').debug() // call debug() if you want debugging messages printed to the cli
 const simulator = require('hyperspace/simulator')
 
 simulator().then(async ({client}) => {

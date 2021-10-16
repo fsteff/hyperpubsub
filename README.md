@@ -50,8 +50,10 @@ pubsub.subPrivateMsg(publicKey, secretKey, (msg) => {
  // process message
 })
 
-// send private messages
-pubsub2.pubPrivateMsg(publicKey, Buffer.from('hello', 'utf-8'))
+// -----------------------------------------
+// ON AN OTHER DEVICE: send private messages
+await pubsub.joinPublicKey(publicKey)
+pubsub.pubPrivateMsg(publicKey, Buffer.from('hello', 'utf-8'))
 ```
 
 [private.js](./examples/private.js) is a minimalistic demonstrator for private messages (uses the simulator as well).
